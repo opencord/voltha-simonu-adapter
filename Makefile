@@ -37,6 +37,11 @@ DOCKER_LABEL_VCS_REF       = $(shell git rev-parse HEAD)
 DOCKER_LABEL_BUILD_DATE    ?= $(shell date -u "+%Y-%m-%dT%H:%M:%SZ")
 DOCKER_LABEL_COMMIT_DATE   = $(shell git show -s --format=%cd --date=iso-strict HEAD)
 
+# Default is GO111MODULE=auto, which will refuse to use go mod if running
+# go less than 1.13.0 and repo is checked out in gopath. For now, force
+# module usage.
+export GO111MODULE=on
+
 DOCKER_BUILD_ARGS ?= \
 	${DOCKER_EXTRA_ARGS} \
 	--build-arg org_label_schema_version="${VERSION}" \
@@ -141,7 +146,7 @@ ifeq (,$(GOCOVER_COBERTURA))
 	@GOCOVER_COBERTURA=$(GOPATH)/bin/gocover-cobertura
 endif
 	@mkdir -p ./tests/results
-	@go test -v -coverprofile ./tests/results/go-test-coverage.out -covermode count ./... 2>&1 | tee ./tests/results/go-test-results.out ;\
+	@go test -mod=vendor -v -coverprofile ./tests/results/go-test-coverage.out -covermode count ./... 2>&1 | tee ./tests/results/go-test-results.out ;\
 	RETURN=$$? ;\
 	$(GO_JUNIT_REPORT) < ./tests/results/go-test-results.out > ./tests/results/go-test-results.xml ;\
 	$(GOCOVER_COBERTURA) < ./tests/results/go-test-coverage.out > ./tests/results/go-test-coverage.xml ;\
