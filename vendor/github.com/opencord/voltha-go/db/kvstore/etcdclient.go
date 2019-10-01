@@ -59,6 +59,16 @@ func NewEtcdClient(addr string, timeout int) (*EtcdClient, error) {
 		lockToSessionMap: lockSessionMap}, nil
 }
 
+// IsConnectionUp returns whether the connection to the Etcd KV store is up.  If a timeout occurs then
+// it is assumed the connection is down or unreachable.
+func (c *EtcdClient) IsConnectionUp(timeout int) bool {
+	// Let's try to get a non existent key.  If the connection is up then there will be no error returned.
+	if _, err := c.Get("non-existent-key", timeout); err != nil {
+		return false
+	}
+	return true
+}
+
 // List returns an array of key-value pairs with key as a prefix.  Timeout defines how long the function will
 // wait for a response
 func (c *EtcdClient) List(key string, timeout int, lock ...bool) (map[string]*KVPair, error) {
@@ -298,7 +308,8 @@ func (c *EtcdClient) RenewReservation(key string) error {
 // listen to receive Events.
 func (c *EtcdClient) Watch(key string) chan *Event {
 	w := v3Client.NewWatcher(c.ectdAPI)
-	channel := w.Watch(context.Background(), key, v3Client.WithPrefix())
+	ctx, cancel := context.WithCancel(context.Background())
+	channel := w.Watch(ctx, key, v3Client.WithPrefix())
 
 	// Create a new channel
 	ch := make(chan *Event, maxClientChannelBufferSize)
@@ -315,7 +326,7 @@ func (c *EtcdClient) Watch(key string) chan *Event {
 	// json format.
 	log.Debugw("watched-channels", log.Fields{"len": len(channelMaps)})
 	// Launch a go routine to listen for updates
-	go c.listenForKeyChange(channel, ch)
+	go c.listenForKeyChange(channel, ch, cancel)
 
 	return ch
 
@@ -382,7 +393,6 @@ func (c *EtcdClient) CloseWatch(key string, ch chan *Event) {
 			if err := t.Close(); err != nil {
 				log.Errorw("watcher-cannot-be-closed", log.Fields{"key": key, "error": err})
 			}
-			close(ch)
 			pos = i
 			break
 		}
@@ -396,8 +406,10 @@ func (c *EtcdClient) CloseWatch(key string, ch chan *Event) {
 	log.Infow("watcher-channel-exiting", log.Fields{"key": key, "channel": channelMaps})
 }
 
-func (c *EtcdClient) listenForKeyChange(channel v3Client.WatchChan, ch chan<- *Event) {
+func (c *EtcdClient) listenForKeyChange(channel v3Client.WatchChan, ch chan<- *Event, cancel context.CancelFunc) {
 	log.Debug("start-listening-on-channel ...")
+	defer cancel()
+	defer close(ch)
 	for resp := range channel {
 		for _, ev := range resp.Events {
 			//log.Debugf("%s %q : %q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
