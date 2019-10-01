@@ -18,16 +18,15 @@ package kafka
 import (
 	"errors"
 	"fmt"
-	"strings"
-	"sync"
-	"time"
-
+	"github.com/Shopify/sarama"
 	scc "github.com/bsm/sarama-cluster"
 	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/opencord/voltha-go/common/log"
 	ic "github.com/opencord/voltha-protos/go/inter_container"
-	"gopkg.in/Shopify/sarama.v1"
+	"strings"
+	"sync"
+	"time"
 )
 
 func init() {
@@ -227,6 +226,13 @@ func (sc *SaramaClient) Start() error {
 	sc.doneCh = make(chan int, 1)
 
 	var err error
+
+	// Add a cleanup in case of failure to startup
+	defer func() {
+		if err != nil {
+			sc.Stop()
+		}
+	}()
 
 	// Create the Cluster Admin
 	if err = sc.createClusterAdmin(); err != nil {
