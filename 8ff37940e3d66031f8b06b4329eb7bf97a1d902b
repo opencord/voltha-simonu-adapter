@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d605a501_eb24a6a3",
+        "filename": "Makefile",
+        "patchSetId": 9
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-09T16:04:42Z",
+      "side": 1,
+      "message": "does this need to be set here, exported above",
+      "range": {
+        "startLine": 126,
+        "startChar": 2,
+        "endLine": 126,
+        "endChar": 13
+      },
+      "revId": "8ff37940e3d66031f8b06b4329eb7bf97a1d902b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15ccbdd9_711d9084",
+        "filename": "Makefile",
+        "patchSetId": 9
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-09T16:04:42Z",
+      "side": 1,
+      "message": "does this need to be set here, exported above",
+      "range": {
+        "startLine": 131,
+        "startChar": 2,
+        "endLine": 131,
+        "endChar": 13
+      },
+      "revId": "8ff37940e3d66031f8b06b4329eb7bf97a1d902b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fb784de_5d233280",
+        "filename": "docker/Dockerfile.simulated_onu",
+        "patchSetId": 9
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1000003
+      },
+      "writtenOn": "2019-10-09T16:04:42Z",
+      "side": 1,
+      "message": "GO11MODULE not set?",
+      "range": {
+        "startLine": 48,
+        "startChar": 4,
+        "endLine": 48,
+        "endChar": 6
+      },
+      "revId": "8ff37940e3d66031f8b06b4329eb7bf97a1d902b",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
