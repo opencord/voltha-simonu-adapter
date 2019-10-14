@@ -18,7 +18,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
-	github.com/opencord/voltha-go v2.2.0+incompatible
+	github.com/opencord/voltha-go v2.2.1-0.20191011073237-626b2168bfbe+incompatible
 	github.com/opencord/voltha-protos v1.0.3
 	github.com/stretchr/testify v1.4.0
 	go.etcd.io/etcd v0.0.0-20190322183551-7a5acb4a43aa // indirect
