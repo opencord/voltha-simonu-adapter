@@ -50,10 +50,11 @@ github.com/hashicorp/serf/coordinate
 github.com/mitchellh/go-homedir
 # github.com/mitchellh/mapstructure v1.1.2
 github.com/mitchellh/mapstructure
-# github.com/opencord/voltha-go v2.2.0+incompatible
+# github.com/opencord/voltha-go v2.2.1-0.20191011073237-626b2168bfbe+incompatible
 github.com/opencord/voltha-go/adapters
 github.com/opencord/voltha-go/adapters/common
 github.com/opencord/voltha-go/common/log
+github.com/opencord/voltha-go/common/probe
 github.com/opencord/voltha-go/common/version
 github.com/opencord/voltha-go/db/kvstore
 github.com/opencord/voltha-go/kafka
