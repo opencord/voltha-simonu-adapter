@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2874a77_c3bf93c4",
+        "filename": "go.mod",
+        "patchSetId": 3
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1000016
+      },
+      "writtenOn": "2019-10-17T23:37:03Z",
+      "side": 1,
+      "message": "I think this is depending on a dev version rather than a release. Ordinarily I\u0027d say we should release voltha-go, but as we\u0027re in the process of moving the libraries out and that will be finished shortly, let\u0027s stick with this for now and tidy up later.",
+      "range": {
+        "startLine": 21,
+        "startChar": 1,
+        "endLine": 21,
+        "endChar": 80
+      },
+      "revId": "531322b23cb0ae5e08f57f6d975f6c4d032a4e33",
+      "serverId": "2a2bfe1b-c5c2-48ed-9ac8-16438ab24388",
+      "unresolved": false
+    }
+  ]
+}
