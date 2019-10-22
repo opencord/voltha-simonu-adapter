@@ -329,6 +329,11 @@ func main() {
 	cf := config.NewAdapterFlags()
 	cf.ParseCommandArguments()
 
+	if cf.PrintVersion {
+		fmt.Println(version.VersionInfo.String(""))
+		return
+	}
+
 	//// Setup logging
 
 	//Setup default logger - applies for packages that do not have specific logger set

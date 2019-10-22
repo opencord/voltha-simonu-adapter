@@ -40,6 +40,7 @@ const (
 	default_CoreTopic        = "rwcore"
 	default_ProbeHost        = ""
 	default_ProbePort        = 8080
+	default_PrintVersion     = false
 )
 
 // AdapterFlags represents the set of configurations used by the read-write adaptercore service
@@ -60,6 +61,7 @@ type AdapterFlags struct {
 	Banner           bool
 	ProbeHost        string
 	ProbePort        int
+	PrintVersion     bool
 }
 
 func init() {
@@ -84,6 +86,7 @@ func NewAdapterFlags() *AdapterFlags {
 		Banner:           default_Banner,
 		ProbeHost:        default_ProbeHost,
 		ProbePort:        default_ProbePort,
+		PrintVersion:     default_PrintVersion,
 	}
 	return &adapterFlags
 }
@@ -134,6 +137,9 @@ func (so *AdapterFlags) ParseCommandArguments() {
 
 	help = fmt.Sprintf("The port on which to listen to answer liveness and readiness probe queries over HTTP.")
 	flag.IntVar(&(so.ProbePort), "probe_port", default_ProbePort, help)
+
+	help = fmt.Sprintf("Print the version information and exit.")
+	flag.BoolVar(&so.PrintVersion, "version", default_PrintVersion, help)
 
 	flag.Parse()
 
