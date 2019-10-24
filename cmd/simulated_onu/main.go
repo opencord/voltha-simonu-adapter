@@ -19,13 +19,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/opencord/voltha-lib-go/pkg/adapters"
-	com "github.com/opencord/voltha-lib-go/pkg/adapters/common"
-	"github.com/opencord/voltha-lib-go/pkg/db/kvstore"
-	"github.com/opencord/voltha-lib-go/pkg/kafka"
-	"github.com/opencord/voltha-lib-go/pkg/log"
-	"github.com/opencord/voltha-lib-go/pkg/probe"
-	"github.com/opencord/voltha-lib-go/pkg/version"
+	"github.com/opencord/voltha-lib-go/v2/pkg/adapters"
+	com "github.com/opencord/voltha-lib-go/v2/pkg/adapters/common"
+	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
+	"github.com/opencord/voltha-lib-go/v2/pkg/kafka"
+	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"github.com/opencord/voltha-lib-go/v2/pkg/probe"
+	"github.com/opencord/voltha-lib-go/v2/pkg/version"
 	ic "github.com/opencord/voltha-protos/go/inter_container"
 	"github.com/opencord/voltha-protos/go/voltha"
 	ac "github.com/opencord/voltha-simonu-adapter/internal/pkg/adaptercore"
@@ -346,7 +346,7 @@ func main() {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 
-	log.SetPackageLogLevel("github.com/opencord/voltha-lib-go/pkg/adapters/common", log.DebugLevel)
+	log.SetPackageLogLevel("github.com/opencord/voltha-lib-go/v2/pkg/adapters/common", log.DebugLevel)
 
 	defer log.CleanUp()
 
