@@ -57,7 +57,7 @@ DOCKER_BUILD_ARGS_LOCAL ?= ${DOCKER_BUILD_ARGS} \
 	--build-arg LOCAL_PYVOLTHA=${LOCAL_PYVOLTHA} \
 	--build-arg LOCAL_PROTOS=${LOCAL_PROTOS}
 
-.PHONY: simulated_onu local-protos
+.PHONY: simulated_onu local-protos local-lib-go
 
 # This should to be the first and default target in this Makefile
 help:
@@ -74,14 +74,26 @@ help:
 	@echo "lint-sanity          : Verify that 'go vet' doesn't report any issues"
 	@echo "lint-mod             : Verify the integrity of the 'mod' files"
 	@echo "lint                 : Shorthand for lint-style & lint-sanity"
+	@echo "local-lib-go         : Copies a local version of the VOTLHA dependencies into the vendor directory"
+	@echo "local-protos         : Copies a local verison of the VOLTHA protos into the vendor directory"
 	@echo "test                 : Generate reports for all go tests"
 	@echo
 
 ## Local Development Helpers
 local-protos:
 ifdef LOCAL_PROTOS
+	rm -rf vendor/github.com/opencord/voltha-protos/go
 	mkdir -p vendor/github.com/opencord/voltha-protos/go
-	cp -r ${GOPATH}/src/github.com/opencord/voltha-protos/go/* vendor/github.com/opencord/voltha-protos/go
+	cp -r ${LOCAL_PROTOS}/go/* vendor/github.com/opencord/voltha-protos/go
+	rm -rf vendor/github.com/opencord/voltha-protos/go/vendor
+endif
+
+## Local Development Helpers
+local-lib-go:
+ifdef LOCAL_LIB_GO
+	rm -rf vendor/github.com/opencord/voltha-lib-go
+	mkdir -p vendor/github.com/opencord/voltha-lib-go/v2/pkg
+	cp -r ${LOCAL_LIB_GO}/pkg/* vendor/github.com/opencord/voltha-lib-go/v2/pkg/
 endif
 
 ## Docker targets
@@ -90,7 +102,7 @@ build: docker-build
 
 docker-build: simulated_onu
 
-simulated_onu: local-protos
+simulated_onu: local-protos local-lib-go
 	docker build $(DOCKER_BUILD_ARGS) -t ${SIMULATEDONU_IMAGENAME}:${DOCKER_TAG} -t ${SIMULATEDONU_IMAGENAME}:latest -f docker/Dockerfile.simulated_onu .
 
 docker-push:
