@@ -38,6 +38,9 @@ type EtcdClient struct {
 	lockToMutexLock  sync.Mutex
 }
 
+// Connection Timeout in Seconds
+var connTimeout int = 2
+
 // NewEtcdClient returns a new client for the Etcd KV store
 func NewEtcdClient(addr string, timeout int) (*EtcdClient, error) {
 	duration := GetDuration(timeout)
@@ -71,7 +74,7 @@ func (c *EtcdClient) IsConnectionUp(timeout int) bool {
 
 // List returns an array of key-value pairs with key as a prefix.  Timeout defines how long the function will
 // wait for a response
-func (c *EtcdClient) List(key string, timeout int, lock ...bool) (map[string]*KVPair, error) {
+func (c *EtcdClient) List(key string, timeout int) (map[string]*KVPair, error) {
 	duration := GetDuration(timeout)
 
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
@@ -91,7 +94,7 @@ func (c *EtcdClient) List(key string, timeout int, lock ...bool) (map[string]*KV
 
 // Get returns a key-value pair for a given key. Timeout defines how long the function will
 // wait for a response
-func (c *EtcdClient) Get(key string, timeout int, lock ...bool) (*KVPair, error) {
+func (c *EtcdClient) Get(key string, timeout int) (*KVPair, error) {
 	duration := GetDuration(timeout)
 
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
@@ -112,7 +115,7 @@ func (c *EtcdClient) Get(key string, timeout int, lock ...bool) (*KVPair, error)
 // Put writes a key-value pair to the KV store.  Value can only be a string or []byte since the etcd API
 // accepts only a string as a value for a put operation. Timeout defines how long the function will
 // wait for a response
-func (c *EtcdClient) Put(key string, value interface{}, timeout int, lock ...bool) error {
+func (c *EtcdClient) Put(key string, value interface{}, timeout int) error {
 
 	// Validate that we can convert value to a string as etcd API expects a string
 	var val string
@@ -155,7 +158,7 @@ func (c *EtcdClient) Put(key string, value interface{}, timeout int, lock ...boo
 
 // Delete removes a key from the KV store. Timeout defines how long the function will
 // wait for a response
-func (c *EtcdClient) Delete(key string, timeout int, lock ...bool) error {
+func (c *EtcdClient) Delete(key string, timeout int) error {
 
 	duration := GetDuration(timeout)
 
@@ -188,8 +191,13 @@ func (c *EtcdClient) Reserve(key string, value interface{}, ttl int64) (interfac
 		return nil, fmt.Errorf("unexpected-type%T", value)
 	}
 
+	duration := GetDuration(connTimeout)
+
 	// Create a lease
-	resp, err := c.ectdAPI.Grant(context.Background(), ttl)
+	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	defer cancel()
+
+	resp, err := c.ectdAPI.Grant(ctx, ttl)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -233,7 +241,7 @@ func (c *EtcdClient) Reserve(key string, value interface{}, ttl int64) (interfac
 		}
 	} else {
 		// Read the Key to ensure this is our Key
-		m, err := c.Get(key, defaultKVGetTimeout, false)
+		m, err := c.Get(key, defaultKVGetTimeout)
 		if err != nil {
 			return nil, err
 		}
@@ -255,8 +263,12 @@ func (c *EtcdClient) Reserve(key string, value interface{}, ttl int64) (interfac
 func (c *EtcdClient) ReleaseAllReservations() error {
 	c.writeLock.Lock()
 	defer c.writeLock.Unlock()
+	duration := GetDuration(connTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	defer cancel()
+
 	for key, leaseID := range c.keyReservations {
-		_, err := c.ectdAPI.Revoke(context.Background(), *leaseID)
+		_, err := c.ectdAPI.Revoke(ctx, *leaseID)
 		if err != nil {
 			log.Errorw("cannot-release-reservation", log.Fields{"key": key, "error": err})
 			return err
@@ -277,8 +289,12 @@ func (c *EtcdClient) ReleaseReservation(key string) error {
 	if leaseID, ok = c.keyReservations[key]; !ok {
 		return nil
 	}
+	duration := GetDuration(connTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	defer cancel()
+
 	if leaseID != nil {
-		_, err := c.ectdAPI.Revoke(context.Background(), *leaseID)
+		_, err := c.ectdAPI.Revoke(ctx, *leaseID)
 		if err != nil {
 			log.Error(err)
 			return err
@@ -299,9 +315,12 @@ func (c *EtcdClient) RenewReservation(key string) error {
 	if leaseID, ok = c.keyReservations[key]; !ok {
 		return errors.New("key-not-reserved")
 	}
+	duration := GetDuration(connTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	defer cancel()
 
 	if leaseID != nil {
-		_, err := c.ectdAPI.KeepAliveOnce(context.Background(), *leaseID)
+		_, err := c.ectdAPI.KeepAliveOnce(ctx, *leaseID)
 		if err != nil {
 			log.Errorw("lease-may-have-expired", log.Fields{"error": err})
 			return err
