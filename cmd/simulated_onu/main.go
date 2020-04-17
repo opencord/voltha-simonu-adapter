@@ -19,15 +19,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/opencord/voltha-lib-go/v2/pkg/adapters"
-	com "github.com/opencord/voltha-lib-go/v2/pkg/adapters/common"
-	"github.com/opencord/voltha-lib-go/v2/pkg/db/kvstore"
-	"github.com/opencord/voltha-lib-go/v2/pkg/kafka"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	"github.com/opencord/voltha-lib-go/v2/pkg/probe"
-	"github.com/opencord/voltha-lib-go/v2/pkg/version"
-	ic "github.com/opencord/voltha-protos/v2/go/inter_container"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	"github.com/opencord/voltha-lib-go/v3/pkg/adapters"
+	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
+	"github.com/opencord/voltha-lib-go/v3/pkg/db/kvstore"
+	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	"github.com/opencord/voltha-lib-go/v3/pkg/probe"
+	"github.com/opencord/voltha-lib-go/v3/pkg/version"
+	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 	ac "github.com/opencord/voltha-simonu-adapter/internal/pkg/adaptercore"
 	"github.com/opencord/voltha-simonu-adapter/internal/pkg/config"
 	"os"
@@ -43,7 +43,7 @@ type adapter struct {
 	iAdapter         adapters.IAdapter
 	kafkaClient      kafka.Client
 	kvClient         kvstore.Client
-	kip              *kafka.InterContainerProxy
+	kip              kafka.InterContainerProxy
 	coreProxy        *com.CoreProxy
 	halted           bool
 	exitChannel      chan int
@@ -126,7 +126,7 @@ func (a *adapter) start(ctx context.Context) {
 	}
 }
 
-func (rw *adapter) stop() {
+func (rw *adapter) stop(ctx context.Context) {
 	// Stop leadership tracking
 	rw.halted = true
 
@@ -136,7 +136,7 @@ func (rw *adapter) stop() {
 	// Cleanup - applies only if we had a kvClient
 	if rw.kvClient != nil {
 		// Release all reservations
-		if err := rw.kvClient.ReleaseAllReservations(); err != nil {
+		if err := rw.kvClient.ReleaseAllReservations(ctx); err != nil {
 			log.Infow("fail-to-release-all-reservations", log.Fields{"error": err})
 		}
 		// Close the DB connection
@@ -197,19 +197,15 @@ func toString(value interface{}) (string, error) {
 	}
 }
 
-func (a *adapter) startInterContainerProxy(ctx context.Context, retries int) (*kafka.InterContainerProxy, error) {
+func (a *adapter) startInterContainerProxy(ctx context.Context, retries int) (kafka.InterContainerProxy, error) {
 	log.Infow("starting-intercontainer-messaging-proxy", log.Fields{"host": a.config.KafkaAdapterHost,
 		"port": a.config.KafkaAdapterPort, "topic": a.config.Topic})
 	var err error
-	var kip *kafka.InterContainerProxy
-	if kip, err = kafka.NewInterContainerProxy(
+	kip := kafka.NewInterContainerProxy(
 		kafka.InterContainerHost(a.config.KafkaAdapterHost),
 		kafka.InterContainerPort(a.config.KafkaAdapterPort),
 		kafka.MsgClient(a.kafkaClient),
-		kafka.DefaultTopic(&kafka.Topic{Name: a.config.Topic})); err != nil {
-		log.Errorw("fail-to-create-common-proxy", log.Fields{"error": err})
-		return nil, err
-	}
+		kafka.DefaultTopic(&kafka.Topic{Name: a.config.Topic}))
 	count := 0
 	for {
 		if err = kip.Start(); err != nil {
@@ -230,7 +226,7 @@ func (a *adapter) startInterContainerProxy(ctx context.Context, retries int) (*k
 	return kip, nil
 }
 
-func (a *adapter) startSimulatedONU(ctx context.Context, kip *kafka.InterContainerProxy, cp *com.CoreProxy) (*ac.SimulatedONU, error) {
+func (a *adapter) startSimulatedONU(ctx context.Context, kip kafka.InterContainerProxy, cp *com.CoreProxy) (*ac.SimulatedONU, error) {
 	log.Info("starting-simulated-onu")
 	var err error
 	sOLT := ac.NewSimulatedONU(ctx, a.kip, cp)
@@ -259,9 +255,14 @@ func (a *adapter) setupRequestHandler(ctx context.Context, coreInstanceId string
 func (a *adapter) registerWithCore(ctx context.Context, retries int) error {
 	log.Info("registering-with-core")
 	adapterDescription := &voltha.Adapter{
-		Id:      "simulated_onu",
+		Id:      "simulated_onu_1",
 		Vendor:  "Open Networking Foundation",
 		Version: version.VersionInfo.Version,
+		Type: "simulated_onu",
+		// TODO add parameters to deploy multiple replicas
+		CurrentReplica: 1,
+		TotalReplicas: 1,
+		Endpoint: "simulated_onu",
 	}
 	types := []*voltha.DeviceType{{Id: "simulated_onu", Adapter: "simulated_onu"}}
 	deviceTypes := &voltha.DeviceTypes{Items: types}
@@ -335,9 +336,13 @@ func main() {
 	}
 
 	//// Setup logging
+	logLevel, err := log.StringToLogLevel(cf.LogLevel)
+	if err != nil {
+		log.Fatalf("Cannot setup logging, %s", err)
+	}
 
 	//Setup default logger - applies for packages that do not have specific logger set
-	if _, err := log.SetDefaultLogger(log.JSON, cf.LogLevel, log.Fields{"instanceId": cf.InstanceID}); err != nil {
+	if _, err := log.SetDefaultLogger(log.JSON, logLevel, log.Fields{"instanceId": cf.InstanceID}); err != nil {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 
@@ -346,7 +351,7 @@ func main() {
 		log.With(log.Fields{"error": err}).Fatal("Cannot setup logging")
 	}
 
-	log.SetPackageLogLevel("github.com/opencord/voltha-lib-go/v2/pkg/adapters/common", log.DebugLevel)
+	log.SetPackageLogLevel("github.com/opencord/voltha-lib-go/v3/pkg/adapters/common", log.DebugLevel)
 
 	defer log.CleanUp()
 
@@ -371,7 +376,7 @@ func main() {
 	log.Infow("received-a-closing-signal", log.Fields{"code": code})
 
 	// Cleanup before leaving
-	ad.stop()
+	ad.stop(ctx)
 
 	elapsed := time.Since(start)
 	log.Infow("runtime", log.Fields{"instanceId": ad.config.InstanceID, "time": elapsed / time.Second})

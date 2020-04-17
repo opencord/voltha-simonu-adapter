@@ -4,8 +4,7 @@ go 1.12
 
 require (
 	github.com/gogo/protobuf v1.3.0
-	github.com/opencord/voltha-lib-go/v2 v2.2.16
-
-	github.com/opencord/voltha-protos/v2 v2.0.1
+	github.com/opencord/voltha-lib-go/v3 v3.1.3
+	github.com/opencord/voltha-protos/v3 v3.3.0
 	github.com/stretchr/testify v1.4.0
 )

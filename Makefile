@@ -58,6 +58,11 @@ DOCKER_BUILD_ARGS_LOCAL ?= ${DOCKER_BUILD_ARGS} \
 	--build-arg LOCAL_PYVOLTHA=${LOCAL_PYVOLTHA} \
 	--build-arg LOCAL_PROTOS=${LOCAL_PROTOS}
 
+VOLTHA_TOOLS_VERSION ?= 2.0.0
+GO                = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app $(shell test -t 0 && echo "-it") -v gocache:/.cache -v gocache-${VOLTHA_TOOLS_VERSION}:/go/pkg voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-golang go
+GO_JUNIT_REPORT   = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app -i voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-go-junit-report go-junit-report
+GOCOVER_COBERTURA = docker run --rm --user $$(id -u):$$(id -g) -v ${CURDIR}:/app -i voltha/voltha-ci-tools:${VOLTHA_TOOLS_VERSION}-gocover-cobertura gocover-cobertura
+
 .PHONY: simulated_onu local-protos local-lib-go
 
 # This should to be the first and default target in this Makefile
@@ -183,5 +188,9 @@ endif
 clean:
 
 distclean: clean
+
+mod-update:
+	${GO} mod tidy
+	${GO} mod vendor
 
 # end file

@@ -19,24 +19,24 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	com "github.com/opencord/voltha-lib-go/v2/pkg/adapters/common"
-	"github.com/opencord/voltha-lib-go/v2/pkg/kafka"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
-	ic "github.com/opencord/voltha-protos/v2/go/inter_container"
-	"github.com/opencord/voltha-protos/v2/go/openflow_13"
-	"github.com/opencord/voltha-protos/v2/go/voltha"
+	com "github.com/opencord/voltha-lib-go/v3/pkg/adapters/common"
+	"github.com/opencord/voltha-lib-go/v3/pkg/kafka"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
+	ic "github.com/opencord/voltha-protos/v3/go/inter_container"
+	"github.com/opencord/voltha-protos/v3/go/openflow_13"
+	"github.com/opencord/voltha-protos/v3/go/voltha"
 	"sync"
 )
 
 type SimulatedONU struct {
 	deviceHandlers        map[string]*DeviceHandler
 	coreProxy             *com.CoreProxy
-	kafkaICProxy          *kafka.InterContainerProxy
+	kafkaICProxy          kafka.InterContainerProxy
 	exitChannel           chan int
 	lockDeviceHandlersMap sync.RWMutex
 }
 
-func NewSimulatedONU(ctx context.Context, kafkaICProxy *kafka.InterContainerProxy, coreProxy *com.CoreProxy) *SimulatedONU {
+func NewSimulatedONU(ctx context.Context, kafkaICProxy kafka.InterContainerProxy, coreProxy *com.CoreProxy) *SimulatedONU {
 	var simulatedOLT SimulatedONU
 	simulatedOLT.exitChannel = make(chan int, 1)
 	simulatedOLT.deviceHandlers = make(map[string]*DeviceHandler)
@@ -264,14 +264,6 @@ func (so *SimulatedONU) Receive_packet_out(deviceId string, egress_port_no int, 
 	return errors.New("UnImplemented")
 }
 
-func (so *SimulatedONU) Suppress_alarm(filter *voltha.AlarmFilter) error {
-	return errors.New("UnImplemented")
-}
-
-func (so *SimulatedONU) Unsuppress_alarm(filter *voltha.AlarmFilter) error {
-	return errors.New("UnImplemented")
-}
-
 func (so *SimulatedONU) Download_image(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	return nil, errors.New("UnImplemented")
 }
@@ -290,4 +282,28 @@ func (so *SimulatedONU) Activate_image_update(device *voltha.Device, request *vo
 
 func (so *SimulatedONU) Revert_image_update(device *voltha.Device, request *voltha.ImageDownload) (*voltha.ImageDownload, error) {
 	return nil, errors.New("UnImplemented")
+}
+
+func (oo *SimulatedONU) Enable_port(deviceID string, port *voltha.Port) error {
+	return errors.New("UnImplemented")
+}
+
+func (oo *SimulatedONU) Disable_port(deviceID string, port *voltha.Port) error {
+	return errors.New("UnImplemented")
+}
+
+func (oo *SimulatedONU) Child_device_lost(deviceID string, pPortNo uint32, onuID uint32) error {
+	return errors.New("UnImplemented")
+}
+
+func (oo *SimulatedONU) Start_omci_test(device *voltha.Device, request *voltha.OmciTestRequest) (*voltha.TestResponse, error) {
+	return nil, errors.New("UnImplemented")
+}
+
+func (oo *SimulatedONU) Suppress_event(filter *voltha.EventFilter) error {
+	return errors.New("UnImplemented")
+}
+
+func (oo *SimulatedONU) Unsuppress_event(filter *voltha.EventFilter) error {
+	return errors.New("UnImplemented")
 }

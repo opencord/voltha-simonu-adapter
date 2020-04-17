@@ -18,7 +18,7 @@ package config
 import (
 	"flag"
 	"fmt"
-	"github.com/opencord/voltha-lib-go/v2/pkg/log"
+	"github.com/opencord/voltha-lib-go/v3/pkg/log"
 	"os"
 )
 
@@ -34,7 +34,7 @@ const (
 	default_KVStoreTimeout   = 5 //in seconds
 	default_KVStoreHost      = "127.0.0.1"
 	default_KVStorePort      = 2379 // Consul = 8500; Etcd = 2379
-	default_LogLevel         = 0
+	default_LogLevel         = "WARN"
 	default_Banner           = false
 	default_Topic            = "simulated_onu"
 	default_CoreTopic        = "rwcore"
@@ -57,7 +57,7 @@ type AdapterFlags struct {
 	KVStorePort      int
 	Topic            string
 	CoreTopic        string
-	LogLevel         int
+	LogLevel         string
 	Banner           bool
 	ProbeHost        string
 	ProbePort        int
@@ -127,7 +127,7 @@ func (so *AdapterFlags) ParseCommandArguments() {
 	flag.IntVar(&(so.KVStorePort), "kv_store_port", default_KVStorePort, help)
 
 	help = fmt.Sprintf("Log level")
-	flag.IntVar(&(so.LogLevel), "log_level", default_LogLevel, help)
+	flag.StringVar(&(so.LogLevel), "log_level", default_LogLevel, help)
 
 	help = fmt.Sprintf("Show startup banner log lines")
 	flag.BoolVar(&so.Banner, "banner", default_Banner, help)
